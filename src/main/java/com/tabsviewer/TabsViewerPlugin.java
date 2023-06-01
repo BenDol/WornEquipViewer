@@ -34,7 +34,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 
 @PluginDescriptor(
-	name = "Tabs Viewer",
+	name = "Worn Equip Viewer",
 	description = "Add an overlay showing the contents of your inventory or equipped tab",
 	tags = {"alternate", "items", "overlay", "second"},
 	enabledByDefault = false
