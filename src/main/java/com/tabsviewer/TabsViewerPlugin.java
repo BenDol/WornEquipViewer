@@ -34,7 +34,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 	name = "Worn Equipment Viewer",
 	description = "Add an overlay showing the contents of your equipped tab",
 	tags = {"equipment", "items", "overlay", "viewer", "gear"},
-	enabledByDefault = false
+	
 )
 public class TabsViewerPlugin extends Plugin
 {
