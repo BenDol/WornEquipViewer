@@ -22,28 +22,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.tabsviewer;
+package com.tabsviewer;
 
-import com.google.inject.Provides;
-import net.runelite.client.config.ConfigManager;
+import javax.inject.Inject;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
-import javax.inject.Inject;
-
 @PluginDescriptor(
-	name = "Worn Equip Viewer",
-	description = "Add an overlay showing the contents of your inventory or equipped tab",
-	tags = {"alternate", "items", "overlay", "second"},
+	name = "Worn Equipment Viewer",
+	description = "Add an overlay showing the contents of your equipped tab",
+	tags = {"equipment", "items", "overlay", "viewer", "gear"},
 	enabledByDefault = false
 )
 public class TabsViewerPlugin extends Plugin
 {
-	@Inject
-	private InventoryViewerOverlay inventoryOverlay;
-
 	@Inject
 	private EquipmentViewerOverlay equipmentOverlay;
 
@@ -53,26 +47,15 @@ public class TabsViewerPlugin extends Plugin
 	@Inject
 	private SpriteManager spriteManager;
 
-	@Inject
-	private TabsViewerConfig config;
-
-	@Provides
-	TabsViewerConfig getConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(TabsViewerConfig.class);
-	}
-
 	@Override
 	public void startUp()
 	{
-		overlayManager.add(inventoryOverlay);
 		overlayManager.add(equipmentOverlay);
 	}
 
 	@Override
 	public void shutDown()
 	{
-		overlayManager.remove(inventoryOverlay);
 		overlayManager.remove(equipmentOverlay);
 	}
 }

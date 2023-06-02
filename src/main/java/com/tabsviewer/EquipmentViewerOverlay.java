@@ -1,55 +1,47 @@
-package net.runelite.client.plugins.tabsviewer;
+package com.tabsviewer;
 
-import net.runelite.api.*;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import javax.inject.Inject;
+import net.runelite.api.Client;
+import net.runelite.api.Constants;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.client.game.ItemManager;
-import net.runelite.client.plugins.tabsviewer.config.ViewerMode;
-import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.ComponentOrientation;
 import net.runelite.client.ui.overlay.components.ImageComponent;
-import net.runelite.client.ui.overlay.components.PanelComponent;
 
-import javax.inject.Inject;
-import java.awt.Point;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-
-public class EquipmentViewerOverlay extends Overlay
+public class EquipmentViewerOverlay extends OverlayPanel
 {
 	private static final int PLACEHOLDER_WIDTH = 36;
+	private static final int PLACEHOLDER_WIDTH_150_PERCENT = 57;
 	private static final int PLACEHOLDER_HEIGHT = 32;
 	private static final ImageComponent PLACEHOLDER_IMAGE = new ImageComponent(new BufferedImage(PLACEHOLDER_WIDTH, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR));
 	private final ItemManager itemManager;
-	private final TabsViewerConfig config;
 	private final Client client;
 
-	private final PanelComponent panelComponent = new PanelComponent();
-
 	@Inject
-	private EquipmentViewerOverlay(Client client, ItemManager itemManager, TabsViewerConfig config)
+	private EquipmentViewerOverlay(Client client, ItemManager itemManager)
 	{
-		this.itemManager = itemManager;
-		this.config = config;
-		this.client = client;
-
 		setPosition(OverlayPosition.BOTTOM_RIGHT);
+		panelComponent.setWrap(true);
+		panelComponent.setGap(new Point(6, 4));
+		panelComponent.setPreferredSize(new Dimension(3 * (Constants.ITEM_SPRITE_WIDTH + 20), 0));
+		panelComponent.setOrientation(ComponentOrientation.HORIZONTAL);
 
+		this.itemManager = itemManager;
+		this.client = client;
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		panelComponent.setWrap(true);
-		panelComponent.setGap(new Point(6, 4));
-		panelComponent.setPreferredSize(new Dimension(3 * (Constants.ITEM_SPRITE_WIDTH + 6 + 14), 0));
-		panelComponent.setOrientation(ComponentOrientation.HORIZONTAL);
-
-		if (config.tabsViewMode() != ViewerMode.EQP && config.tabsViewMode() != ViewerMode.BOTH)
-		{
-			return null;
-		}
-
 		final ItemContainer itemContainer = client.getItemContainer(InventoryID.EQUIPMENT);
 
 		if (itemContainer == null)
@@ -61,251 +53,267 @@ public class EquipmentViewerOverlay extends Overlay
 		ArrayList<ArrayList<Item>> loop = getEquipment(items);
 		panelComponent.getChildren().clear();
 
-		for (int i = 0; i < loop.size(); i++) {
-			ArrayList<Item> row = loop.get(i);
+		buildFirstRow(loop.get(0));
+		buildSecondRow(loop.get(1));
+		buildThirdRow(loop.get(2));
+		buildForthRow(loop.get(3));
+		buildFifthRow(loop.get(4));
 
-			for (int j = 0; j < row.size(); j++) {
+		return panelComponent.render(graphics);
+	}
 
-				if (i == 0) {
-					if (j == 0) {
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (38 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-					} else if (j == 2) {
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (38 * 1.5), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-					} else {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(image));
-									continue;
-								}
-							}  else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
+	private void buildFirstRow(ArrayList<Item> row)
+	{
+		for (int j = 0; j < row.size(); j++)
+		{
+			if (j == 0)
+			{
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(PLACEHOLDER_WIDTH_150_PERCENT, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+			}
+			else if (j == 2)
+			{
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(PLACEHOLDER_WIDTH_150_PERCENT, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+			}
+			else
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(image));
 					}
 				}
-
-
-
-				if (i == 1) {
-					if (j == 0) {
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (10 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(image));
-
-									continue;
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
-					} else if (j == 1) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(image));
-									continue;
-								}
-							}
-							else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
-					} else if (j == 2) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-
-									panelComponent.getChildren().add(new ImageComponent(image));
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (10 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-									continue;
-								}
-							}
-							else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (10 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
-					}
-				}
-
-
-				if (i == 2) {
-					// weapon
-					if (j == 0) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (3), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-									continue;
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (3), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-							}
-						}
-					} else if (j == 1) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (4 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-									continue;
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (4), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-							}
-						}
-					} else if (j == 2) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (2 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-
-									continue;
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (26), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (12), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-							}
-						}
-
-					}
-				}
-				//legs
-				if (i == 3) {
-					if (j == 0) {
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (6 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36 * 1.5 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-					} else if (j == 2) {
-						panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36 * 1.5), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-					} else {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(image));
-									continue;
-								}
-							}else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
-					}
-				}
-				if (i == 4) {
-					// boots
-					if (j == 0) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (3), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (3), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-							}
-						}
-					} else if (j == 1) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (2 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (2), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (36), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-
-							}
-						}
-					} else if (j == 2) {
-						if (i < items.length)
-						{
-							final Item item = row.get(j);
-							if (item != null && item.getQuantity() > 0)
-							{
-								final BufferedImage image = getImage(item);
-								if (image != null)
-								{
-									panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (2 ), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-									panelComponent.getChildren().add(new ImageComponent(image));
-
-									continue;
-								}
-							} else {
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (26), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-								panelComponent.getChildren().add(new ImageComponent(new BufferedImage((int) (12), (int) (32 ), BufferedImage.TYPE_4BYTE_ABGR)));
-							}
-						}
-
-					}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
 				}
 			}
 		}
+	}
 
-		return panelComponent.render(graphics);
+	private void buildSecondRow(ArrayList<Item> row)
+	{
+		for (int j = 0; j < row.size(); j++)
+		{
+			if (j == 0)
+			{
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(15, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(image));
+
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+			else if (j == 1)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(image));
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+			else if (j == 2)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(image));
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(15, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(new ImageComponent(new BufferedImage(15, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+		}
+	}
+
+	private void buildThirdRow(ArrayList<Item> row)
+	{
+		for (int j = 0; j < row.size(); j++)
+		{
+			if (j == 0)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(3, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(new ImageComponent(new BufferedImage(3, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+
+				}
+			}
+			else if (j == 1)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(4, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(new ImageComponent(new BufferedImage(4, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+
+				}
+			}
+			else if (j == 2)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(2, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+		}
+	}
+
+	private void buildForthRow(ArrayList<Item> row)
+	{
+		for (int j = 0; j < row.size(); j++)
+		{
+			if (j == 0)
+			{
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(9, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(PLACEHOLDER_WIDTH_150_PERCENT, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+			}
+			else if (j == 2)
+			{
+				panelComponent.getChildren().add(new ImageComponent(new BufferedImage(PLACEHOLDER_WIDTH_150_PERCENT, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+			}
+			else
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(image));
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+		}
+	}
+
+	private void buildFifthRow(ArrayList<Item> row)
+	{
+		for (int j = 0; j < row.size(); j++)
+		{
+			if (j == 0)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(3, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(new ImageComponent(new BufferedImage(3, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+
+				}
+			}
+			else if (j == 1)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(2, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(new ImageComponent(new BufferedImage(2, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+
+				}
+			}
+			else if (j == 2)
+			{
+				final Item item = row.get(j);
+				if (item != null && item.getQuantity() > 0)
+				{
+					final BufferedImage image = getImage(item);
+					if (image != null)
+					{
+						panelComponent.getChildren().add(new ImageComponent(new BufferedImage(2, PLACEHOLDER_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR)));
+						panelComponent.getChildren().add(new ImageComponent(image));
+						continue;
+					}
+				}
+				else
+				{
+					panelComponent.getChildren().add(PLACEHOLDER_IMAGE);
+				}
+			}
+		}
 	}
 
 	private ArrayList<ArrayList<Item>> getEquipment(Item[] items)
@@ -346,10 +354,13 @@ public class EquipmentViewerOverlay extends Overlay
 		if (index == -1)
 		{
 			row.add(null);
-		} else if (index >= items.length)
+		}
+		else if (index >= items.length)
 		{
 			row.add(null);
-		} else {
+		}
+		else
+		{
 			row.add(items[index]);
 		}
 	}
