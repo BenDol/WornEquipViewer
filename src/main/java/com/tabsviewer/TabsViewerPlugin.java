@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 AWPH-I
+ * Copyright (c) 2023 JZomDev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
