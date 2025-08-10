@@ -25,6 +25,9 @@
 package com.tabsviewer;
 
 import javax.inject.Inject;
+
+import com.google.inject.Provides;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -39,6 +42,9 @@ import net.runelite.client.ui.overlay.OverlayManager;
 public class TabsViewerPlugin extends Plugin
 {
 	@Inject
+	private EquipmentViewerConfig config;
+
+	@Inject
 	private EquipmentViewerOverlay equipmentOverlay;
 
 	@Inject
@@ -46,6 +52,12 @@ public class TabsViewerPlugin extends Plugin
 
 	@Inject
 	private SpriteManager spriteManager;
+
+	@Provides
+	EquipmentViewerConfig provideConfig(ConfigManager configManager)
+	{
+		return configManager.getConfig(EquipmentViewerConfig.class);
+	}
 
 	@Override
 	public void startUp()
